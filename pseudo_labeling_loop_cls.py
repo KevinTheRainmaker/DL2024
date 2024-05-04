@@ -156,7 +156,7 @@ test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 # 모델 설정
 model = models.resnet50(pretrained=True)
 num_ftrs = model.fc.in_features
-model.fc = nn.Linear(num_ftrs, 3)
+model.fc = nn.Linear(num_ftrs, len(dataset.classes)-1)
 model = model.to(device)
 
 # 손실 함수와 옵티마이저
