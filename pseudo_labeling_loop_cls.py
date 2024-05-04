@@ -162,7 +162,7 @@ model = model.to(device)
 # 손실 함수와 옵티마이저
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
-6
+
 # 학습 루프
 def train_model(model, criterion, optimizer, num_epochs=10):
     for epoch in range(num_epochs):
