@@ -33,9 +33,9 @@ def main():
             st.subheader("이미지를 업로드하세요.")
             uploaded_file = st.file_uploader(label="", type=["jpg", "jpeg", "png"], key="file_uploader")
         if uploaded_file is not None:
-            ss['image'] = uploaded_file  # backup the file
             ss['upload_file'] = False
             ss['process_img'] = True
+            ss['image'] = uploaded_file  # backup the file
             st.rerun()
                 
     if ss['process_img']:        
@@ -43,7 +43,7 @@ def main():
         upload_img = Image.open(ss['image'])
 
         #face_img = process_image(upload_img)
-        face_img = upload_img
+        ss['face_img'] = upload_img
         with con1:
     	    with st.spinner('사진을 분류중입니다.'):
                 #로딩 화면 테스트용 더미 시간
@@ -60,12 +60,13 @@ def main():
                 ss['closet_dist'] = np.random.rand(1)
         ss['process_img'] = False
         ss['show_result'] = True
+        st.rerun()
             
     if ss['show_result']: 
         with con1:
             _, col, _ = st.columns([1, 3, 1])
             with col:
-                st.image(face_img, caption='크롭된 얼굴 사진', use_column_width=True)
+                st.image(ss['face_img'], caption='크롭된 얼굴 사진', use_column_width=True)
                     
         #이미지 결과 출력
         with con2:
@@ -89,5 +90,13 @@ def main():
                     st.write(category)
                 with col2:
                     st.progress(prob)
+            # Add a button to reset the state
+            if st.button('다시 시작하기'):
+                ss['process_img'] = False
+                ss['show_result'] = False
+                ss['upload_file'] = True
+                ss.clear()  # Optionally clear all session state
+                st.rerun()
+
 if __name__ == '__main__':
     main()
