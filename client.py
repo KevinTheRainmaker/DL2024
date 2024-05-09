@@ -31,8 +31,9 @@ def main():
                 predictions = np.random.rand(7)
                 #grad_cam = get_gradcam(face_img)
                 grad_cam = Image.open(uploaded_file)
-                #closet_img = get_closet(face_img)
+                #closet_img, closet_dist = get_closet(face_img)
                 closet_img = Image.open(uploaded_file)
+                closet_dist = np.random.rand(1)
                 
             with con1:
                 col1, col2, col3 = st.columns([1, 3, 1])
@@ -46,15 +47,20 @@ def main():
             with con4:
                 # Display the prediction results as progress bars
                 st.write("가장 비슷한 동물상은 **{}** 입니다!".format(categories[np.argmax(predictions)]))
-    
+				#닮은 동물과의 거리
+                col1, col2 = st.columns([1, 3])
+                with col1:
+                    st.write("닮은 동물과의 유사도")
+                with col2:
+                    st.progress(closet_dist[0])
+                    
                 # Inject custom CSS for each progress bar
                 for category, prob in zip(categories, predictions):
-                    with st.container():
-                        col1, col2 = st.columns([1, 3])
-                        with col1:
-                            st.write(category)
-                        with col2:
-                            st.progress(prob)
+                    col1, col2 = st.columns([1, 3])
+                    with col1:
+                        st.write(category)
+                    with col2:
+                        st.progress(prob)
     with empty2 :
         st.empty()
 
