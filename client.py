@@ -23,26 +23,29 @@ categories = ['강아지', '고양이', '토끼', '공룡', '곰', '사슴', '�
 def main():
     with empty1 :
        st.empty()
+    with empty2 :
+        st.empty()
     with con1:
         st.title("닮은 동물상 찾기")
-        st.subheader("이미지를 업로드하세요.")
 
-        if ss['upload_file']:
+    if ss['upload_file']:
+        with con1:
+            st.subheader("이미지를 업로드하세요.")
             uploaded_file = st.file_uploader(label="", type=["jpg", "jpeg", "png"], key="file_uploader")
-            if uploaded_file is not None:
-                ss['image'] = uploaded_file  # backup the file
-                ss['upload_file'] = False
-                ss['process_img'] = True
-                st.rerun()
+        if uploaded_file is not None:
+            ss['image'] = uploaded_file  # backup the file
+            ss['upload_file'] = False
+            ss['process_img'] = True
+            st.rerun()
                 
-        if ss['process_img']:        
-            # PIL Image로 변환
-            upload_img = Image.open(ss['image'])
+    if ss['process_img']:        
+        # PIL Image로 변환
+        upload_img = Image.open(ss['image'])
 
-            #face_img = process_image(upload_img)
-            face_img = upload_img
-
-            with st.spinner('사진을 분류중입니다.'):
+        #face_img = process_image(upload_img)
+        face_img = upload_img
+        with con1:
+    	    with st.spinner('사진을 분류중입니다.'):
                 #로딩 화면 테스트용 더미 시간
                 time.sleep(2)
                 
@@ -51,43 +54,40 @@ def main():
                 
                 #grad_cam = get_gradcam(face_img)
                 ss['grad_cam'] = upload_img
-                
+            
                 #closet_img, closet_dist = get_closet(face_img)
                 ss['closet_img'] = upload_img
                 ss['closet_dist'] = np.random.rand(1)
-            ss['process_img'] = False
-            ss['show_result'] = True
+        ss['process_img'] = False
+        ss['show_result'] = True
             
-        if ss['show_result']: 
-            with con1:
-                _, col, _ = st.columns([1, 3, 1])
-                with col:
-                    st.image(face_img, caption='크롭된 얼굴 사진', use_column_width=True)
+    if ss['show_result']: 
+        with con1:
+            _, col, _ = st.columns([1, 3, 1])
+            with col:
+                st.image(face_img, caption='크롭된 얼굴 사진', use_column_width=True)
                     
-            #이미지 결과 출력
-            with con2:
-                st.image(ss['grad_cam'], caption='Grad-CAM Visualization', use_column_width=True)
-            with con3:
-                st.image(ss['closet_img'], caption='가장 비슷한 동물', use_column_width=True)
-            with con4:
-                # Display the prediction results as progress bars
-                st.write("가장 비슷한 동물상은 **{}** 입니다!".format(categories[np.argmax(ss['predictions'])]))
-				#닮은 동물과의 거리
+        #이미지 결과 출력
+        with con2:
+            st.image(ss['grad_cam'], caption='Grad-CAM Visualization', use_column_width=True)
+        with con3:
+            st.image(ss['closet_img'], caption='가장 비슷한 동물', use_column_width=True)
+        with con4:
+            # Display the prediction results as progress bars
+            st.write("가장 비슷한 동물상은 **{}** 입니다!".format(categories[np.argmax(ss['predictions'])]))
+			#닮은 동물과의 거리
+            col1, col2 = st.columns([1, 3])
+            with col1:
+                st.write("닮은 동물과의 유사도")
+            with col2:
+                st.progress(ss['closet_dist'][0])
+                    
+            # Inject custom CSS for each progress bar
+            for category, prob in zip(categories, ss['predictions']):
                 col1, col2 = st.columns([1, 3])
                 with col1:
-                    st.write("닮은 동물과의 유사도")
+                    st.write(category)
                 with col2:
-                    st.progress(ss['closet_dist'][0])
-                    
-                # Inject custom CSS for each progress bar
-                for category, prob in zip(categories, ss['predictions']):
-                    col1, col2 = st.columns([1, 3])
-                    with col1:
-                        st.write(category)
-                    with col2:
-                        st.progress(prob)
-    with empty2 :
-        st.empty()
-
+                    st.progress(prob)
 if __name__ == '__main__':
     main()
