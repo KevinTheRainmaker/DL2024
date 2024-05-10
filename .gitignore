@@ -194,3 +194,6 @@ share/jupyter/nbextensions/pydeck/extensionRequires.js
 share/jupyter/nbextensions/pydeck/index.js
 share/jupyter/nbextensions/pydeck/index.js.map
 Scripts/tqdm.exe
+
+#
+temp/

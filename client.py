@@ -15,12 +15,15 @@ with open(file_path, 'r') as file:
     lottie_animation = json.load(file)
 
 #레이아웃 설정
-st.set_page_config(layout="wide")
-empty1,con1,empty2 = st.columns([0.3,1.0,0.3])
-empyt1,con2,con3,empty2 = st.columns([0.3,0.5,0.5,0.3])
-empyt1,con4,con5,empty2 = st.columns([0.3,0.5,0.5,0.3])
-empyt1,con6,empty2 = st.columns([0.3,1.0,0.3])
-empyt1,con7,empty2 = st.columns([0.3,1.0,0.3])
+st.set_page_config(
+    page_title="닮은 얼굴상 찾기",
+    page_icon="🐶",
+    layout="wide")
+empty1,con1,empty2 = st.columns([0.5,1.0,0.5])
+empyt1,con2,con3,empty2 = st.columns([0.5,0.5,0.5,0.5])
+empyt1,con4,con5,empty2 = st.columns([0.5,0.5,0.5,0.5])
+empyt1,con6,empty2 = st.columns([0.5,1.0,0.5])
+empyt1,con7,empty2 = st.columns([0.5,1.0,0.5])
 
 #화면상태를 의미하는 세션 상태
 if 'upload_file' not in ss: #파일 업로드 화면
@@ -55,7 +58,7 @@ def main():
     with empty2 :
         st.empty()
     with con1:
-        st.title("닮은 동물상 찾기")
+        st.title("닮은 동물상 찾기 🐶")
 
     if ss['upload_file']:
         with con1:
