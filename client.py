@@ -14,7 +14,7 @@ file_path = 'asset/loading.json'
 with open(file_path, 'r') as file:
     lottie_animation = json.load(file)
 
-
+#레이아웃 설정
 st.set_page_config(layout="wide")
 empty1,con1,empty2 = st.columns([0.3,1.0,0.3])
 empyt1,con2,con3,empty2 = st.columns([0.3,0.5,0.5,0.3])
@@ -22,21 +22,32 @@ empyt1,con4,con5,empty2 = st.columns([0.3,0.5,0.5,0.3])
 empyt1,con6,empty2 = st.columns([0.3,1.0,0.3])
 empyt1,con7,empty2 = st.columns([0.3,1.0,0.3])
 
-
-if 'upload_file' not in ss:
+#화면상태를 의미하는 세션 상태
+if 'upload_file' not in ss: #파일 업로드 화면
     ss['upload_file'] = True
 
-if 'process_img' not in ss:
+if 'process_img' not in ss:#이미지 처리 화면
     ss['process_img'] = False    
 
-if 'show_result' not in ss:
+if 'show_result' not in ss:#결과 출력 화면
     ss['show_result'] = False
-    
+
+#모델 라벨 카테고리.
 categories = np.array(['강아지', '고양이', '토끼', '공룡', '곰', '사슴', '여우'])
 
-def get_category_text(category):
-    return "고양이 얼굴상은 인간의 얼굴이 고양이와 유사한 특징을 가질 때 사용되는 표현입니다. 이러한 얼굴상을 가진 사람들은 특히 크고 또렷한 눈, 날카로운 눈매, 작고 잘 정의된 코, 부드러운 턱선과 같은 특징을 갖고 있습니다. 또한, 고양이처럼 섬세하고 우아한 분위기를 풍기며, 신비로운 매력이나 도도한 인상을 줄 수도 있습니다."
+animal_text = {
+    '강아지': '밝고 친근한 느낌, 둥근 얼굴과 큰 눈이 특징. 사람들과 쉽게 친해지며, 순수하고 선한 인상을 줌.',
+    '고양이': '날카로운 눈매와 작은 코, 우아하고 신비로운 매력이 특징. 독립적이고 자신감 있는 태도를 가짐.',
+    '토끼': '긴 눈과 볼륨감 있는 볼, 부드러운 인상이 특징. 순수하고 상냥한 성격을 가진 것으로 인식됨.',
+    '공룡': '강인하고 드물게 보는 특이한 얼굴 특징, 강렬하고 인상적인 모습을 가짐.',
+    '곰': '큰 얼굴과 뚜렷한 이목구비, 포근하고 따뜻한 느낌을 줌. 보호 본능과 강인함을 연상시킴.',
+    '사슴': '긴 속눈썹과 큰 눈, 우아하고 섬세한 인상. 조용하고 차분한 성격을 표현하는데 적합.',
+    '여우': '영리하고 교활한 이미지, 날카로운 눈매와 뾰족한 이목구비가 특징. 민첩하고 야무진 성격을 연상시킴.'
+}
 
+
+def get_category_text(category):
+    return animal_text[category]
 
 def main():
     with empty1 :
