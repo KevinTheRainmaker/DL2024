@@ -5,9 +5,8 @@ import json
 from PIL import Image
 from streamlit import session_state as ss
 from streamlit_lottie import st_lottie_spinner
+from streamlit_image_comparison import image_comparison
 import json
-
-
 
 # JSON 파일 경로
 file_path = 'asset/loading.json'
@@ -19,7 +18,8 @@ with open(file_path, 'r') as file:
 st.set_page_config(layout="wide")
 empty1,con1,empty2 = st.columns([0.3,1.0,0.3])
 empyt1,con2,con3,empty2 = st.columns([0.3,0.5,0.5,0.3])
-empyt1,con4,empty2 = st.columns([0.3,1.0,0.3])
+empyt1,con4,con5,empty2 = st.columns([0.3,0.5,0.5,0.3])
+empyt1,con6,empty2 = st.columns([0.3,1.0,0.3])
 
 
 if 'upload_file' not in ss:
@@ -69,7 +69,7 @@ def main():
                 ss['grad_cam'] = upload_img
             
                 #closet_img, closet_dist = get_closet(face_img)
-                ss['closet_img'] = upload_img
+                ss['closet_img'] = Image.open("asset/testresult2.jpg")
                 ss['closet_dist'] = np.random.rand(1)
         ss['process_img'] = False
         ss['show_result'] = True
@@ -82,7 +82,6 @@ def main():
         sorted_categories = categories[sorted_indices]
 
         with con1:
-
             _, col, _ = st.columns([1, 3, 1])
             with col:
                 st.subheader("크롭된 얼굴 사진")
@@ -93,10 +92,22 @@ def main():
             st.subheader("Grad-CAM Visualization")
             st.image(ss['grad_cam'], use_column_width=True)
         with con3:
-            st.subheader("비슷한 동물 사진")
-            st.image(ss['closet_img'], use_column_width=True)
+            st.subheader("사진 비교")
+            image_comparison(
+                img1=ss['grad_cam'],
+                img2=ss['face_img'],
+            )
         with con4:
+            st.subheader("비슷한 동물 사진")
+            st.image(ss['closet_img'], use_column_width=True)                        
             # Display the prediction results as progress bars
+        with con5:
+            st.subheader("사진 비교")
+            image_comparison(
+                img1=ss['closet_img'],
+                img2=ss['face_img'],
+            )
+        with con6:
             col1, col2 = st.columns(2)
             col1.metric("가장 비슷한 동물상", sorted_categories[0])
 			
