@@ -20,6 +20,7 @@ empty1,con1,empty2 = st.columns([0.3,1.0,0.3])
 empyt1,con2,con3,empty2 = st.columns([0.3,0.5,0.5,0.3])
 empyt1,con4,con5,empty2 = st.columns([0.3,0.5,0.5,0.3])
 empyt1,con6,empty2 = st.columns([0.3,1.0,0.3])
+empyt1,con7,empty2 = st.columns([0.3,1.0,0.3])
 
 
 if 'upload_file' not in ss:
@@ -32,6 +33,10 @@ if 'show_result' not in ss:
     ss['show_result'] = False
     
 categories = np.array(['강아지', '고양이', '토끼', '공룡', '곰', '사슴', '여우'])
+
+def get_category_text(category):
+    return "고양이 얼굴상은 인간의 얼굴이 고양이와 유사한 특징을 가질 때 사용되는 표현입니다. 이러한 얼굴상을 가진 사람들은 특히 크고 또렷한 눈, 날카로운 눈매, 작고 잘 정의된 코, 부드러운 턱선과 같은 특징을 갖고 있습니다. 또한, 고양이처럼 섬세하고 우아한 분위기를 풍기며, 신비로운 매력이나 도도한 인상을 줄 수도 있습니다."
+
 
 def main():
     with empty1 :
@@ -109,8 +114,11 @@ def main():
             )
         with con6:
             col1, col2 = st.columns(2)
+            
+            text = get_category_text(sorted_categories[0])
+            st.markdown(text) 
+
             col1.metric("가장 비슷한 동물상", sorted_categories[0])
-			
             col2.metric(sorted_categories[0]+"와의 유사도", sorted_predictions[0])
 
             #st.write("가장 비슷한 동물상은 **{}** 입니다!".format(categories[np.argmax(ss['predictions'])]))
@@ -130,6 +138,7 @@ def main():
                 with col2:
                     st.progress(prob)
             # Add a button to reset the state
+        with con7:           
             if st.button('다시 시도하기'):
                 ss['process_img'] = False
                 ss['show_result'] = False
