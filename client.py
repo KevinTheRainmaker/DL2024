@@ -20,10 +20,10 @@ st.set_page_config(
     page_icon="🐶",
     layout="wide")
 empty1,con1,empty2 = st.columns([0.5,1.0,0.5])
-empyt1,con2,con3,empty2 = st.columns([0.5,0.5,0.5,0.5])
-empyt1,con4,con5,empty2 = st.columns([0.5,0.5,0.5,0.5])
-empyt1,con6,empty2 = st.columns([0.5,1.0,0.5])
-empyt1,con7,empty2 = st.columns([0.5,1.0,0.5])
+empyt1,con2,con3,empty2 = st.columns([0.3,0.5,0.5,0.3])
+# empyt1,con4,con5,empty2 = st.columns([0.5,0.5,0.5,0.5])
+empyt1,con4,empty2 = st.columns([0.4,1.2,0.4])
+empyt1,con5,empty2 = st.columns([0.4,1.2,0.4])
 
 #화면상태를 의미하는 세션 상태
 if 'upload_file' not in ss: #파일 업로드 화면
@@ -48,6 +48,26 @@ animal_text = {
     '여우': '영리하고 교활한 이미지, 날카로운 눈매와 뾰족한 이목구비가 특징. 민첩하고 야무진 성격을 연상시킴.'
 }
 
+
+st.markdown("""
+            <style>
+            h2 {
+                color: #7340bf;
+                justify-content: center;
+            }
+            </style>
+            """, unsafe_allow_html=True
+            )
+
+st.markdown("""
+            <style>
+            h3 {
+                color: #7340bf;
+                justify-content: center;
+            }
+            </style>
+            """, unsafe_allow_html=True
+            )
 
 def get_category_text(category):
     return animal_text[category]
@@ -103,59 +123,70 @@ def main():
         with con1:
             _, col, _ = st.columns([1, 3, 1])
             with col:
-                st.subheader("크롭된 얼굴 사진")
+                st.markdown("<h3>크롭된 얼굴 사진</h3>", unsafe_allow_html=True)
                 st.image(ss['face_img'], use_column_width=True)
-                    
-        #이미지 결과 출력
-        col1, col2 = st.columns(2)
-        
+                
         with con2:
-            st.subheader("Grad-CAM Visualization")
-            # st.image(ss['grad_cam'], use_column_width=True)
-        # with con3:
-            # st.subheader("사진 비교")
+            st.markdown("<h3>Grad-CAM Visualization</h3>", unsafe_allow_html=True)
             image_comparison(
+                img2=ss['face_img'],
                 img1=ss['grad_cam'],
-                img2=ss['face_img'],
+                width=350,
             )
-        with con4:
-            st.subheader("비슷한 동물 사진")
-            # st.image(ss['closet_img'], use_column_width=True)                        
-            # Display the prediction results as progress bars
-        # with con5:
-            # st.subheader("사진 비교")
-            image_comparison(
-                img1=ss['closet_img'],
-                img2=ss['face_img'],
-            )
-        with con6:
-            col1, col2 = st.columns(2)
             
+        with con3:
+            st.markdown("<h3>비슷한 동물 사진</h3>", unsafe_allow_html=True)
+            image_comparison(
+                img2=ss['face_img'],
+                img1=ss['closet_img'],
+                width=350,
+            )
+
+        with con4:
             text = get_category_text(sorted_categories[0])
-            st.markdown(text) 
+            cat_text = f'<h2>{text}</h2>'
+            st.markdown(cat_text, unsafe_allow_html=True) 
+            
+            #이미지 결과 출력
+            col1, col2 = st.columns(2)
+            st.markdown("""
+                        <style>
+                        div[data-testid="metric-container"] {
+                        background-color: rgba(28, 131, 225, 0.1);
+                        border: 1px solid rgba(28, 131, 225, 0.1);
+                        padding: 5% 5% 5% 10%;
+                        border-radius: 5px;
+                        color: rgb(30, 103, 119);
+                        overflow-wrap: break-word;
+                        }
+                        </style>
+                        """
+                        , unsafe_allow_html=True)
+            col1.metric("가장 비슷한 동물상",sorted_categories[0])
+            col2.metric(sorted_categories[0]+"상인 정도", sorted_predictions[0])
 
-            col1.metric("가장 비슷한 동물상", sorted_categories[0])
-            col2.metric(sorted_categories[0]+"와의 유사도", sorted_predictions[0])
-
+        with con5:
             #st.write("가장 비슷한 동물상은 **{}** 입니다!".format(categories[np.argmax(ss['predictions'])]))
 			#닮은 동물과의 거리
-            col1, col2 = st.columns([1, 3])
-            with col1:
+            col3, col4 = st.columns(2)
+            with col3:
                 st.write("닮은 동물 사진과의 거리")
-            with col2:
+            with col4:
                 st.progress(ss['closet_dist'][0])
             
 
             # Inject custom CSS for each progress bar
             for category, prob in zip(sorted_categories, sorted_predictions):
-                col1, col2 = st.columns([1, 3])
-                with col1:
+                col5, col6 = st.columns(2)
+                with col5:
                     st.write(category)
-                with col2:
+                with col6:
                     st.progress(prob)
+
+
+        with con5:           
             # Add a button to reset the state
-        with con7:           
-            if st.button('다시 시도하기'):
+            if st.button('다시 시도하기', use_container_width=True):
                 ss['process_img'] = False
                 ss['show_result'] = False
                 ss['upload_file'] = True
