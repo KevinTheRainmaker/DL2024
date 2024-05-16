@@ -107,6 +107,8 @@ def main():
                 st.image(ss['face_img'], use_column_width=True)
                     
         #이미지 결과 출력
+        col1, col2 = st.columns(2)
+        
         with con2:
             st.subheader("Grad-CAM Visualization")
             # st.image(ss['grad_cam'], use_column_width=True)
