@@ -109,19 +109,19 @@ def main():
         #이미지 결과 출력
         with con2:
             st.subheader("Grad-CAM Visualization")
-            st.image(ss['grad_cam'], use_column_width=True)
-        with con3:
-            st.subheader("사진 비교")
+            # st.image(ss['grad_cam'], use_column_width=True)
+        # with con3:
+            # st.subheader("사진 비교")
             image_comparison(
                 img1=ss['grad_cam'],
                 img2=ss['face_img'],
             )
         with con4:
             st.subheader("비슷한 동물 사진")
-            st.image(ss['closet_img'], use_column_width=True)                        
+            # st.image(ss['closet_img'], use_column_width=True)                        
             # Display the prediction results as progress bars
-        with con5:
-            st.subheader("사진 비교")
+        # with con5:
+            # st.subheader("사진 비교")
             image_comparison(
                 img1=ss['closet_img'],
                 img2=ss['face_img'],
