@@ -234,7 +234,7 @@ def main():
         
         with con0:
             st.subheader("이미지를 업로드하세요.")
-            uploaded_file = st.file_uploader(label="", type=["jpg", "jpeg", "png"], key="file_uploader")
+            uploaded_file = st.file_uploader(label=" ", type=["jpg", "jpeg", "png"], key="file_uploader")
         if uploaded_file is not None:
             ss['upload_file'] = False
             ss['process_img'] = True
