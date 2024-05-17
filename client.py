@@ -5,6 +5,9 @@ from streamlit_image_comparison import image_comparison
 
 import numpy as np
 import json
+import os
+
+import faiss
 
 from PIL import Image
 import cv2
@@ -20,6 +23,8 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 # JSON 파일 경로
 file_path = 'asset/loading.json'
 # 파일을 열고 JSON 데이터 읽기
@@ -33,11 +38,10 @@ st.set_page_config(
     layout="wide")
 
 empty1,con0,empty2 = st.columns([0.5,0.5,0.5])
-empty1,con1,con2,empty2 = st.columns([0.3,0.5,0.5,0.3])
-empyt1,con3,con4,empty2 = st.columns([0.3,0.5,0.5,0.3])
-# empyt1,con4,con5,empty2 = st.columns([0.5,0.5,0.5,0.5])
-empyt1,con5,empty2 = st.columns([0.4,1.2,0.4])
-empyt1,con6,empty2 = st.columns([0.4,1.2,0.4])
+empty1,con1,con2,empty3 = st.columns([0.2,0.5,0.5,0.2])
+empyt1,con3,con4,empty3 = st.columns([0.2,0.5,0.5,0.2])
+empyt1,con5,empty2 = st.columns([0.2,1.0,0.2])
+empyt1,con6,empty2 = st.columns([0.2,1.0,0.2])
 
 #화면상태를 의미하는 세션 상태
 if 'upload_file' not in ss: #파일 업로드 화면
@@ -87,7 +91,7 @@ st.markdown("""
             </style>
             """, unsafe_allow_html=True
             )
-
+    
 def get_category_text(category):
     return animal_text[category]
 
@@ -133,8 +137,9 @@ class GradCAM:
 
 # 이미지 전처리
 transform = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
+    transforms.Resize((224, 224)),  # 이미지 크기 조정
+    transforms.ToTensor(),  # 이미지를 텐서로 변환
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 정규화
 ])
 
 def load_model(classes=12):
@@ -146,6 +151,11 @@ def load_model(classes=12):
     # 학습된 모델의 가중치 로드
     model.load_state_dict(torch.load('model.pth'))
     model.eval()
+    return model
+
+def load_extractor():
+    model = models.resnet50(pretrained=True)  # 예시로 ResNet-50 모델 사용
+    model.eval()  # 평가 모드로 설정
     return model
 
 def predict_with_gradcam(model, PILimage):
@@ -178,13 +188,47 @@ def predict_with_gradcam(model, PILimage):
     cv2.imwrite('tmp/cam.jpg', np.uint8(255 * cam_img))
     return predicted_label, probs
 
+def load_faiss_index(path):
+    return faiss.read_index(path)
+
+def image_to_tensor(PILimage):
+
+    image = PILimage.convert('RGB')
+    return transform(image).unsqueeze(0)  # 배치 차원 추가
+
+def extract_features(model, image_tensor):
+    with torch.no_grad():
+        features = model(image_tensor)
+    return features.numpy().flatten()  # 벡터로 변환
+
+def search_similar_images(index, query_vector, k=1):
+    distances, indices = index.search(np.array([query_vector]), k)
+    return distances, indices
+
+def get_all_image_paths(root_folder):
+    image_paths = []
+    for dirpath, _, filenames in os.walk(root_folder):
+        for filename in filenames:
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
+                image_paths.append(os.path.join(dirpath, filename))
+    return image_paths
+
+def rerun_app():
+    ss['process_img'] = False
+    ss['show_result'] = False
+    ss['upload_file'] = True
+    ss.clear()
+    st.rerun()
+    # st.experimental_rerun()
+
 def main():
     with empty1 :
         st.empty()
     with empty2 :
         st.empty()
     with con0:
-        st.title("닮은 동물상 찾기 🐶")
+        st.markdown("<h1 style='text-align: center;'>닮은 동물상 찾기 🐶</h1>", unsafe_allow_html=True)
+        
 
     if ss['upload_file']:
         
@@ -200,20 +244,33 @@ def main():
     if ss['process_img']:        
         # PIL Image로 변환
         upload_img = Image.open(ss['image'])
+        upload_img_gray = upload_img.convert('L')
         ss['face_img'] = upload_img
         with con0:
     	    with st_lottie_spinner(lottie_animation, key="download"):             
                 model = load_model(12)
-                #로딩 화면 테스트용 더미 시간
-                time.sleep(2)
-                ss['predictions'], ss['probs'] = predict_with_gradcam(model, upload_img)
-                # ss['predictions'] = np.random.rand(7)
 
+                ss['predictions'], ss['probs'] = predict_with_gradcam(model, upload_img_gray)
+                
+                class_map = {'0':'dog','1':'dog','8':'dog','9':'dog','11':'dog',
+                             '5':'cat','7':'cat','2':'fox','3':'tiger','4':'lion',
+                             '6':'cheetah','10':'wolf'}
+                
                 ss['grad_cam'] = Image.open('tmp/cam.jpg')
-            
-                #closet_img, closet_dist = get_closet(face_img)
-                ss['closet_img'] = Image.open("asset/testresult2.jpg")
-                ss['closet_dist'] = np.random.rand(1)
+                
+                extractor = load_extractor()
+                lcategory = class_map[str(ss['predictions'])]
+                loaded_index = load_faiss_index(f'faiss_{lcategory}.index')
+                query_image_tensor = image_to_tensor(upload_img)
+                query_vector = extract_features(extractor, query_image_tensor)
+                distances, indices = search_similar_images(loaded_index, query_vector, k=5)
+                image_folder = f'./images/{lcategory}'
+                image_files = get_all_image_paths(image_folder)
+                for idx, distance in zip(indices[0], distances[0]):
+                    if image_files[idx].split('/')[2] == lcategory:
+                        ss['closest_img'] = Image.open(image_files[idx])
+                        ss['closest_dist'] = distance
+                        break
                 
         ss['process_img'] = False
         ss['show_result'] = True
@@ -226,17 +283,24 @@ def main():
         with con1:
             # _, col, _ = st.columns([1, 3, 1])
             # with col:
-            st.markdown("<h3>원본 사진</h3>", unsafe_allow_html=True)
-            st.image(ss['face_img'], width = 350)
+            st.markdown("<h3 style='text-align: center;'>원본 사진</h3>", unsafe_allow_html=True)
+            # st.image(ss['face_img'], use_column_width='auto')
+            st.image(ss['face_img'], width=500)
                 
         with con2:
-            st.markdown("<h3>가장 비슷한 동물상</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align: center;'>가장 비슷한 동물상</h3>", unsafe_allow_html=True)
 
             col1, col2 = st.columns(2)
             col1.metric("",result_category)
             col2.metric("", round(probability*100,2))
                         # Inject custom CSS for each progress bar
-            for category, prob in zip(categories, ss['probs']):
+
+            sorted_indices = np.argsort(ss['probs'])[::-1]
+            ss['probs'] = ss['probs'][sorted_indices]
+            sorted_categories = categories[sorted_indices]
+
+            top_k = 0
+            for category, prob in zip(sorted_categories, ss['probs']):
                 prob = int(round(prob*100))
 
                 col5, col6 = st.columns(2)
@@ -244,34 +308,47 @@ def main():
                     st.write(category)
                 with col6:
                     st.progress(prob)
+                top_k += 1
+                if top_k == 10:
+                    break
         with con3:
-            st.markdown("<h3>Grad-CAM Visualization</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align: center;'>Grad-CAM Visualization</h3>", unsafe_allow_html=True)
             image_comparison(
                 img2=ss['face_img'],
                 img1=ss['grad_cam'],
-                width=350,
+                width=500,
             )
             
         with con4:
-            st.markdown("<h3>비슷한 동물 사진</h3>", unsafe_allow_html=True)
+            st.markdown("<h3 style='text-align: center;'>비슷한 동물 사진</h3>", unsafe_allow_html=True)
             image_comparison(
                 img2=ss['face_img'],
-                img1=ss['closet_img'],
-                width=350,
+                img1=ss['closest_img'],
+                width=500,
             )
 
         with con5:
             text = get_category_text(result_category)
-            cat_text = f'<h2>{text}</h2>'
+            cat_text = f'<h2 style="text-align: center;">{text}</h2>'
             st.markdown(cat_text, unsafe_allow_html=True) 
 
         with con6:           
-            if st.button('다시 시도하기', use_container_width=True, type="primary"):
-                ss['process_img'] = False
-                ss['show_result'] = False
-                ss['upload_file'] = True
-                ss.clear()
-                st.rerun()
+            st.markdown(
+                """
+            <style>
+            button {
+                height: 60px;
+                font-weight: bold;
+                font-style: italic
+                font-size: 54px; !important
+            }
+            </style>
+            """,
+                unsafe_allow_html=True,
+            )
+            rerun_text = '다시 시도하기'
+            if st.button(rerun_text, use_container_width=True, type="primary"):
+                rerun_app()
                     
 if __name__ == '__main__':
     main()
