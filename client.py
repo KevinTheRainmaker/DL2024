@@ -17,13 +17,16 @@ from torch import nn
 import torchvision.models as models
 import torchvision.transforms as transforms
 
-import time
-
 import warnings
 
 warnings.filterwarnings('ignore')
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger()
 
 # JSON 파일 경로
 file_path = 'asset/loading.json'
@@ -56,6 +59,10 @@ if 'show_result' not in ss:#결과 출력 화면
 #모델 라벨 카테고리.
 categories = np.array(['비글','보더콜리','여우','호랑이','사자','장모종 고양이','치타','단모종 고양이','도베르만','리트리버','늑대','시츄'])
 
+class_map = {'0':'dog','1':'dog','8':'dog','9':'dog','11':'dog',
+                '5':'cat','7':'cat','2':'fox','3':'tiger','4':'lion',
+                '6':'cheetah','10':'wolf'}
+                
 animal_text = {
     '비글': '밝고 쾌활한 느낌, 큰 귀와 맑은 눈이 특징. 활발하고 호기심 많은 성격으로, 사람들과 쉽게 어울리는 사람.',
     '보더콜리': '영리하고 집중력 있는 인상, 날렵한 눈매와 날카로운 눈빛이 특징. 활동적이며 목표 지향적인 성격을 가진 사람.',
@@ -240,42 +247,55 @@ def main():
             ss['process_img'] = True
             ss['image'] = uploaded_file  # backup the file
             st.rerun()
-                
-    if ss['process_img']:        
-        # PIL Image로 변환
-        upload_img = Image.open(ss['image'])
-        upload_img_gray = upload_img.convert('L')
-        ss['face_img'] = upload_img
-        with con0:
-    	    with st_lottie_spinner(lottie_animation, key="download"):             
-                model = load_model(12)
-
-                ss['predictions'], ss['probs'] = predict_with_gradcam(model, upload_img_gray)
-                
-                class_map = {'0':'dog','1':'dog','8':'dog','9':'dog','11':'dog',
-                             '5':'cat','7':'cat','2':'fox','3':'tiger','4':'lion',
-                             '6':'cheetah','10':'wolf'}
-                
-                ss['grad_cam'] = Image.open('tmp/cam.jpg')
-                
-                extractor = load_extractor()
-                lcategory = class_map[str(ss['predictions'])]
-                loaded_index = load_faiss_index(f'faiss_{lcategory}.index')
-                query_image_tensor = image_to_tensor(upload_img)
-                query_vector = extract_features(extractor, query_image_tensor)
-                distances, indices = search_similar_images(loaded_index, query_vector, k=5)
-                image_folder = f'./images/{lcategory}'
-                image_files = get_all_image_paths(image_folder)
-                for idx, distance in zip(indices[0], distances[0]):
-                    if image_files[idx].split('/')[2] == lcategory:
-                        ss['closest_img'] = Image.open(image_files[idx])
-                        ss['closest_dist'] = distance
-                        break
-                
-        ss['process_img'] = False
-        ss['show_result'] = True
-        st.rerun()
+    try:     
+        if ss['process_img']:        
+            # PIL Image로 변환
+            upload_img = Image.open(ss['image'])
+            upload_img_gray = upload_img.convert('L')
+            logger.debug("Image loaded successfully.")
+            logger.debug(f"Image size: {upload_img.size}")
+            logger.debug(f"Image size: {upload_img_gray.size}")
             
+            ss['face_img'] = upload_img
+            with con0:
+                with st_lottie_spinner(lottie_animation, key="download"):     
+                    try:        
+                        model = load_model(12)  
+                    except Exception as e:                
+                        logger.debug(e)
+
+                    ss['predictions'], ss['probs'] = predict_with_gradcam(model, upload_img_gray)
+                    
+                    ss['grad_cam'] = Image.open('tmp/cam.jpg')
+                    
+                    del model
+                    gc.collect()
+                    
+                    print('gc collect done')
+                    
+                    extractor = load_extractor()
+                    print('load extractor done')
+                    
+                    lcategory = class_map[str(ss['predictions'])]
+                    loaded_index = load_faiss_index(f'faiss_{lcategory}.index')
+                    query_image_tensor = image_to_tensor(upload_img)
+                    query_vector = extract_features(extractor, query_image_tensor)
+                    distances, indices = search_similar_images(loaded_index, query_vector, k=5)
+                    image_folder = f'./images/{lcategory}'
+                    image_files = get_all_image_paths(image_folder)
+                    for idx, distance in zip(indices[0], distances[0]):
+                        if image_files[idx].split('/')[2] == lcategory:
+                            ss['closest_img'] = Image.open(image_files[idx])
+                            ss['closest_dist'] = distance
+                            break
+                    
+            ss['process_img'] = False
+            ss['show_result'] = True
+            st.rerun()
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        st.error(f"Error: {e}")
+         
     if ss['show_result']: 
         result_category = categories[ss['predictions']]
         probability = ss['probs'][ss['predictions']]
