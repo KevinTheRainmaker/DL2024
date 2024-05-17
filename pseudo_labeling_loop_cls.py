@@ -9,6 +9,7 @@ from sklearn.semi_supervised import LabelSpreading
 from PIL import Image
 
 from tqdm import tqdm
+from collections import Counter
 
 import warnings
 
@@ -72,7 +73,7 @@ transform = transforms.Compose([
 ])
 
 # 데이터셋 로드
-dataset = CustomImageDataset(root="./images", transform=transform)
+dataset = CustomImageDataset(root="./dataset/filter_data", transform=transform)
 label_map = dataset._get_label_map()
 
 print(f'{label_map = }')
@@ -132,18 +133,26 @@ while unlabeled_fraction > 0.01:
 print('label spreading done.')
 
 # 업데이트된 레이블을 데이터셋에 적용
-new_labels = []
-idx = 0
+# new_labels = []
+# idx = 0
 print('update dataset')
-for img, _ in tqdm(dataset):
-    label = dataset._get_label(dataset.data[idx][0])
-    new_labels.append(labels[idx] if label != -1 else -1)
-    idx += 1
+# for img, _ in tqdm(dataset):
+#     label = dataset._get_label(dataset.data[idx][0])
+#     new_labels.append(labels[idx] if label != -1 else -1)
+#     idx += 1
 
-dataset.update_labels(new_labels)
+# 리스트 내 같은 값들의 개수 세기
+count = Counter(labels)
 
-# -1 레이블을 가진 데이터를 제외하고 학습
+# 결과 출력
+for item, freq in count.items():
+    print(f"값 {item}: {freq}개")
+
+dataset.update_labels(labels)
+
+# 개수가 300개 이하인 레이블은 제외하고 학습
 filtered_indices = [idx for idx, (_, label) in enumerate(dataset) if label != -1]
+# filtered_indices = [idx for idx, (_, label) in enumerate(dataset) if count[label] >= 300]
 filtered_dataset = Subset(dataset, filtered_indices)
 
 # 트레이닝 및 테스트 데이터 분리

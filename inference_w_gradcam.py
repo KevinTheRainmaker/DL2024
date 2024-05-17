@@ -60,7 +60,7 @@ transform = transforms.Compose([
 # 모델 정의 (ResNet50)
 model = models.resnet50(pretrained=True)
 num_ftrs = model.fc.in_features
-model.fc = nn.Linear(num_ftrs, 4)
+model.fc = nn.Linear(num_ftrs, 12)
 
 # 학습된 모델의 가중치 로드
 model.load_state_dict(torch.load('model.pth'))
@@ -97,6 +97,6 @@ def predict_with_gradcam(model, image_path):
     return predicted_label, probs
 
 # 예측 실행
-predicted_label, probs = predict_with_gradcam(model, 'wolf_test.png')
+predicted_label, probs = predict_with_gradcam(model, './wolf_test.png')
 print("Predicted Label:", predicted_label)
 print("Class Probabilities:", probs)
