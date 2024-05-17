@@ -59,22 +59,23 @@ def get_all_image_paths(root_folder):
 
 # 모델 로드
 model = load_model()
+# for label in ['cat','cheetah','dog','fox','lion','tiger','wolf']:
+#     # # 이미지 폴더 (루트)
+#     image_folder = f'./images/{label}'
+#     image_files = get_all_image_paths(image_folder)
 
-# # 이미지 폴더 (루트)
-image_folder = f'./images'
-image_files = get_all_image_paths(image_folder)
+#     # # 이미지 벡터 추출
+#     feature_vectors = np.array([extract_features(model, image_to_tensor(f)) for f in tqdm(image_files, desc="Extracting features")])
 
-# # 이미지 벡터 추출
-# feature_vectors = np.array([extract_features(model, image_to_tensor(f)) for f in tqdm(image_files, desc="Extracting features")])
+#     # # FAISS 인덱스 생성
+#     index = build_faiss_index(feature_vectors)
 
-# # FAISS 인덱스 생성
-# index = build_faiss_index(feature_vectors)
-
-index_path = './faiss.index'
-# save_faiss_index(index, index_path)
+#     index_path = f'./faiss_{label}.index'
+#     save_faiss_index(index, index_path)
 
 # 인덱스 로드
-loaded_index = load_faiss_index(index_path)
+prediction = 'cat'
+loaded_index = load_faiss_index(f'faiss_{prediction}.index')
 
 # 쿼리 이미지
 query_image_path = './cat_test.png'
@@ -86,6 +87,8 @@ distances, indices = search_similar_images(loaded_index, query_vector, k=5)
 
 # 결과 출력
 label='cat'
+image_folder = f'./images/{label}'
+image_files = get_all_image_paths(image_folder)
 for idx, distance in zip(indices[0], distances[0]):
     if image_files[idx].split('/')[2] == label:
         print(f"{image_files[idx]} with distance {distance}")
