@@ -61,7 +61,7 @@ output_dir = "faiss"
 os.system("unzip "+file_name+" -d "+output_dir)
     
 # print(os.getcwd())
-print(os.listdir('./'))
+print(os.listdir('./faiss'))
 print('################')
 # JSON 파일 경로
 file_path = 'asset/loading.json'
