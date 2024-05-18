@@ -46,27 +46,27 @@ empyt1,con6,empty2 = st.columns([0.2,1.0,0.2])
 conn = st.connection('s3', type=FilesConnection)
 
 os.makedirs('./temp', exist_ok=True)
-os.makedirs('./faiss', exist_ok=True)
+# os.makedirs('./faiss', exist_ok=True)
 
-def download_drive_file(output, url):
-    gdown.download(url, output, quiet=False)
+# def download_drive_file(output, url):
+    # gdown.download(url, output, quiet=False)
 
-download_drive_file('faiss', 'https://drive.google.com/file/d/1QSzpvyfEqYM2dbzLPiwVnZdsExP0rMn3/view?usp=sharing')
+# download_drive_file('faiss', 'https://drive.google.com/file/d/1QSzpvyfEqYM2dbzLPiwVnZdsExP0rMn3/view?usp=sharing')
 
 # print(os.getcwd())
 # print(os.listdir('./'))
 
-file_name = "faiss.zip"
-output_dir = "faiss"
-os.system("unzip "+file_name+" -d "+output_dir)
+# file_name = "faiss.zip"
+# output_dir = "faiss"
+# os.system("unzip "+file_name+" -d "+output_dir)
     
 # print(os.getcwd())
-for root, dirs, files in os.walk("./faiss"):
-    path = root.split(os.sep)
-    print((len(path) - 1) * '---', os.path.basename(root))
-    for file in files:
-        print(len(path) * '---', file)
-print('################')
+# for root, dirs, files in os.walk("./faiss"):
+#     path = root.split(os.sep)
+#     print((len(path) - 1) * '---', os.path.basename(root))
+#     for file in files:
+#         print(len(path) * '---', file)
+# print('################')
 # JSON 파일 경로
 file_path = 'asset/loading.json'
 # 파일을 열고 JSON 데이터 읽기
