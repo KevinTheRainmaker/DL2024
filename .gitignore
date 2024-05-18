@@ -197,3 +197,5 @@ Scripts/tqdm.exe
 
 #
 temp/
+
+.streamlit/secrets.toml
