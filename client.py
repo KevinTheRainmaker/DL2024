@@ -279,59 +279,42 @@ def main():
             ss['process_img'] = True
             ss['image'] = uploaded_file  # backup the file
             st.rerun()
-    try:     
-        if ss['process_img']:        
-            # PIL Image로 변환
-            upload_img = Image.open(ss['image'])
-            upload_img_gray = upload_img.convert('L')
-            logger.debug("Image loaded successfully.")
-            logger.debug(f"Image size: {upload_img.size}")
-            logger.debug(f"Image size: {upload_img_gray.size}")
+    if ss['process_img']:        
+        # PIL Image로 변환
+        upload_img = Image.open(ss['image'])
+        upload_img_gray = upload_img.convert('L')
+        logger.debug("Image loaded successfully.")
+        logger.debug(f"Image size: {upload_img.size}")
+        logger.debug(f"Image size: {upload_img_gray.size}")
 
-            ss['face_img'] = upload_img
-            with con0:
-                with st_lottie_spinner(lottie_animation, key="download"):     
-                    try:
-                        model = load_model(12)
-                    except Exception as e:                
-                        logger.debug(e)
+        ss['face_img'] = upload_img
+        with con0:
+            with st_lottie_spinner(lottie_animation, key="download"):     
+                model = load_model(12)
 
-                    ss['predictions'], ss['probs'] = predict_with_gradcam(model, upload_img_gray)
-                    
-                    cv2.imwrite('temp/cam.jpg', cv2.resize(cv2.imread('temp/cam.jpg'), upload_img.size))
-                    ss['grad_cam'] = Image.open('temp/cam.jpg')
-                    
-                    del model
-                    gc.collect()
-                    
-                    print('gc collect done')
-                    
-                    extractor = load_extractor()
-                    print('load extractor done')
-                    
-                    lcategory = class_map[str(ss['predictions'])]
-                    loaded_index = load_faiss_index(f'faiss/faiss_{lcategory}.index')
-                    logger.debug("faiss loaded.")
-                    query_image_tensor = image_to_tensor(upload_img)
-                    query_vector = extract_features(extractor, query_image_tensor)
-                    logger.debug("features extracted")
-                    distances, indices = search_similar_images(loaded_index, query_vector, k=5)
-                    logger.debug("similar images searched")
-                    df = conn.read(f"dl2024-bucket/list/{lcategory}_list.csv", input_format="csv", ttl=600)
-                    image_files = df.iloc[:, 0].tolist()
-                    for idx, distance in zip(indices[0], distances[0]):
-                        if image_files[idx].split('/')[2] == lcategory:
-                            ss['closest_img'] = Image.open(image_files[idx])
-                            ss['closest_dist'] = distance
-                            break
-                    
-            ss['process_img'] = False
-            ss['show_result'] = True
-            st.rerun()
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        st.error(f"Error: {e}")
-         
+                ss['predictions'], ss['probs'] = predict_with_gradcam(model, upload_img_gray)
+                
+                cv2.imwrite('temp/cam.jpg', cv2.resize(cv2.imread('temp/cam.jpg'), upload_img.size))
+                ss['grad_cam'] = Image.open('temp/cam.jpg')
+                
+                extractor = load_extractor()
+                
+                lcategory = class_map[str(ss['predictions'])]
+                loaded_index = load_faiss_index(f'faiss/faiss_{lcategory}.index')
+                logger.debug("faiss loaded.")
+                query_image_tensor = image_to_tensor(upload_img)
+                query_vector = extract_features(extractor, query_image_tensor)
+                logger.debug("features extracted")
+                distances, indices = search_similar_images(loaded_index, query_vector, k=5)
+                logger.debug("similar images searched")
+                df = conn.read(f"dl2024-bucket/list/{lcategory}_list.csv", input_format="csv", ttl=600)
+                image_files = df.iloc[:, 0].tolist()
+                for idx, distance in zip(indices[0], distances[0]):
+                    if image_files[idx].split('/')[2] == lcategory:
+                        ss['closest_img'] = Image.open(image_files[idx])
+                        ss['closest_dist'] = distance
+                        break
+                             
     if ss['show_result']: 
         result_category = categories[ss['predictions']]
         probability = ss['probs'][ss['predictions']]
