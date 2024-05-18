@@ -31,6 +31,18 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
 
+#레이아웃 설정
+st.set_page_config(
+    page_title="닮은 얼굴상 찾기",
+    page_icon="🐶",
+    layout="wide")
+
+empty1,con0,empty2 = st.columns([0.5,0.5,0.5])
+empty1,con1,con2,empty3 = st.columns([0.2,0.5,0.5,0.2])
+empyt1,con3,con4,empty3 = st.columns([0.2,0.5,0.5,0.2])
+empyt1,con5,empty2 = st.columns([0.2,1.0,0.2])
+empyt1,con6,empty2 = st.columns([0.2,1.0,0.2])
+
 conn = st.connection('s3', type=FilesConnection)
 
 os.makedirs('./temp', exist_ok=True)
@@ -52,18 +64,6 @@ file_path = 'asset/loading.json'
 # 파일을 열고 JSON 데이터 읽기
 with open(file_path, 'r') as file:
     lottie_animation = json.load(file)
-
-#레이아웃 설정
-st.set_page_config(
-    page_title="닮은 얼굴상 찾기",
-    page_icon="🐶",
-    layout="wide")
-
-empty1,con0,empty2 = st.columns([0.5,0.5,0.5])
-empty1,con1,con2,empty3 = st.columns([0.2,0.5,0.5,0.2])
-empyt1,con3,con4,empty3 = st.columns([0.2,0.5,0.5,0.2])
-empyt1,con5,empty2 = st.columns([0.2,1.0,0.2])
-empyt1,con6,empty2 = st.columns([0.2,1.0,0.2])
 
 #화면상태를 의미하는 세션 상태
 if 'upload_file' not in ss: #파일 업로드 화면
