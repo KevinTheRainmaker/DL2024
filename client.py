@@ -16,7 +16,7 @@ import torch
 from torch import nn
 import torchvision.models as models
 import torchvision.transforms as transforms
-
+import gc
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -156,7 +156,7 @@ def load_model(classes=12):
     model.fc = nn.Linear(num_ftrs, classes)
 
     # 학습된 모델의 가중치 로드
-    model.load_state_dict(torch.load('model.pth'))
+    model.load_state_dict(torch.load('model.pth',map_location='cpu'))
     model.eval()
     return model
 
@@ -192,7 +192,7 @@ def predict_with_gradcam(model, PILimage):
     cam_img = heatmap + np.float32(img)
     cam_img = cam_img / np.max(cam_img)
 
-    cv2.imwrite('tmp/cam.jpg', np.uint8(255 * cam_img))
+    cv2.imwrite('temp/cam.jpg', np.uint8(255 * cam_img))
     return predicted_label, probs
 
 def load_faiss_index(path):
@@ -255,18 +255,19 @@ def main():
             logger.debug("Image loaded successfully.")
             logger.debug(f"Image size: {upload_img.size}")
             logger.debug(f"Image size: {upload_img_gray.size}")
-            
+
             ss['face_img'] = upload_img
             with con0:
                 with st_lottie_spinner(lottie_animation, key="download"):     
-                    try:        
-                        model = load_model(12)  
+                    try:
+                        model = load_model(12)
                     except Exception as e:                
                         logger.debug(e)
 
                     ss['predictions'], ss['probs'] = predict_with_gradcam(model, upload_img_gray)
                     
-                    ss['grad_cam'] = Image.open('tmp/cam.jpg')
+                    cv2.imwrite('temp/cam.jpg', cv2.resize(cv2.imread('temp/cam.jpg'), upload_img.size))
+                    ss['grad_cam'] = Image.open('temp/cam.jpg')
                     
                     del model
                     gc.collect()
@@ -277,11 +278,14 @@ def main():
                     print('load extractor done')
                     
                     lcategory = class_map[str(ss['predictions'])]
-                    loaded_index = load_faiss_index(f'faiss_{lcategory}.index')
+                    loaded_index = load_faiss_index(f'faiss/faiss_{lcategory}.index')
+                    logger.debug("faiss loaded.")
                     query_image_tensor = image_to_tensor(upload_img)
                     query_vector = extract_features(extractor, query_image_tensor)
+                    logger.debug("features extracted")
                     distances, indices = search_similar_images(loaded_index, query_vector, k=5)
-                    image_folder = f'./images/{lcategory}'
+                    logger.debug("similar images searched")
+                    image_folder = f'./images/{lcategory}/'
                     image_files = get_all_image_paths(image_folder)
                     for idx, distance in zip(indices[0], distances[0]):
                         if image_files[idx].split('/')[2] == lcategory:
