@@ -51,15 +51,14 @@ os.makedirs('./faiss', exist_ok=True)
 def download_drive_file(output, url):
     gdown.download(url, output, quiet=False)
 
-download_drive_file('faiss', 'https://drive.google.com/file/d/1QSzpvyfEqYM2dbzLPiwVnZdsExP0rMn3/view?usp=sharing')
-download_drive_file('loading.json', 'https://drive.google.com/file/d/1eXQ2L9J0_sYQlrMbCLm5kM5UDVD6I9Ro/view?usp=sharing')
+# download_drive_file('faiss', 'https://drive.google.com/file/d/1QSzpvyfEqYM2dbzLPiwVnZdsExP0rMn3/view?usp=sharing')
 
-print(os.getcwd())
-print(os.listdir('./'))
+# print(os.getcwd())
+# print(os.listdir('./'))
 
-file_name = "faiss.zip"
-output_dir = "faiss"
-os.system("unzip "+file_name+" -d "+output_dir)
+# file_name = "faiss.zip"
+# output_dir = "faiss"
+# os.system("unzip "+file_name+" -d "+output_dir)
     
 # JSON 파일 경로
 file_path = 'asset/loading.json'
@@ -183,10 +182,6 @@ def load_model(classes=12):
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, classes)
     
-    model_path = '/mount/src/dl2024/model.pth'
-    
-    if not os.path.exists(model_path):
-        download_drive_file('model.pth', 'https://drive.google.com/file/d/1YIw5PCCkwEkC2hu3ooNtKJrqR5npORLD/view?usp=sharing')
     # 학습된 모델의 가중치 로드
     model.load_state_dict(torch.load('./model.pth', map_location=device))
     model.eval()
