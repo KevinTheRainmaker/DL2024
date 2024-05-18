@@ -2,11 +2,14 @@ import streamlit as st
 from streamlit import session_state as ss
 from streamlit_lottie import st_lottie_spinner
 from streamlit_image_comparison import image_comparison
+from st_files_connection import FilesConnection
 
 import numpy as np
 import json
 import os
+import csv
 
+import gdown
 import faiss
 
 from PIL import Image
@@ -28,6 +31,22 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger()
 
+conn = st.connection('s3', type=FilesConnection)
+
+os.makedirs('./temp', exist_ok=True)
+os.makedirs('./faiss', exist_ok=True)
+
+def download_drive_file(output, url):
+    gdown.download(url, output, quiet=False)
+
+download_drive_file('model.pth', 'https://drive.google.com/file/d/1sFlYDtHlnd1NF64HODLbk9OX-f4VPMnc/view?usp=sharing')
+download_drive_file('faiss', 'https://drive.google.com/file/d/1QSzpvyfEqYM2dbzLPiwVnZdsExP0rMn3/view?usp=sharing')
+download_drive_file('loading.json', 'https://drive.google.com/file/d/1eXQ2L9J0_sYQlrMbCLm5kM5UDVD6I9Ro/view?usp=sharing')
+
+file_name = "faiss.zip"
+output_dir = "faiss"
+os.system("unzip "+file_name+" -d "+output_dir)
+    
 # JSON 파일 경로
 file_path = 'asset/loading.json'
 # 파일을 열고 JSON 데이터 읽기
@@ -291,8 +310,8 @@ def main():
                     logger.debug("features extracted")
                     distances, indices = search_similar_images(loaded_index, query_vector, k=5)
                     logger.debug("similar images searched")
-                    image_folder = f'./images/{lcategory}/'
-                    image_files = get_all_image_paths(image_folder)
+                    df = conn.read(f"dl2024-bucket/list/{lcategory}_list.csv", input_format="csv", ttl=600)
+                    image_files = df.iloc[:, 0].tolist()
                     for idx, distance in zip(indices[0], distances[0]):
                         if image_files[idx].split('/')[2] == lcategory:
                             ss['closest_img'] = Image.open(image_files[idx])
@@ -381,5 +400,4 @@ def main():
                 rerun_app()
                     
 if __name__ == '__main__':
-    os.makedirs('./temp', exist_ok=True)
     main()
