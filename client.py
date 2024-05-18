@@ -7,9 +7,6 @@ from st_files_connection import FilesConnection
 import numpy as np
 import json
 import os
-import csv
-
-import gdown
 import faiss
 
 from PIL import Image
@@ -314,7 +311,7 @@ def main():
                 for idx, distance in zip(indices[0], distances[0]):
                     if image_files[idx].split('/')[2] == lcategory:
                         # ss['closest_img'] = Image.open(image_files[idx])
-                        ss['closest_img'] = Image.open(fs.open(f'dl2024-bucket{image_files[idx]}', mode='rb').read())
+                        ss['closest_img'] = fs.open(f'dl2024-bucket{image_files[idx]}', mode='rb').read()
                         ss['closest_dist'] = distance
                         break
                              
