@@ -312,7 +312,8 @@ def main():
                 image_files = df.iloc[:, 0].tolist()
                 for idx, distance in zip(indices[0], distances[0]):
                     if image_files[idx].split('/')[2] == lcategory:
-                        ss['closest_img'] = Image.open(image_files[idx])
+                        # ss['closest_img'] = Image.open(image_files[idx])
+                        ss['closest_img'] = conn.read(f'dl2024-bucket{image_files[idx]}')
                         ss['closest_dist'] = distance
                         break
                              
