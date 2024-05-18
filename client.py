@@ -19,7 +19,7 @@ import torch
 from torch import nn
 import torchvision.models as models
 import torchvision.transforms as transforms
-import gc
+import s3fs
 import warnings
 
 warnings.filterwarnings('ignore')
@@ -44,6 +44,7 @@ empyt1,con5,empty2 = st.columns([0.2,1.0,0.2])
 empyt1,con6,empty2 = st.columns([0.2,1.0,0.2])
 
 conn = st.connection('s3', type=FilesConnection)
+fs = s3fs.S3FileSystem(anon=False)
 
 os.makedirs('./temp', exist_ok=True)
 # os.makedirs('./faiss', exist_ok=True)
@@ -313,7 +314,7 @@ def main():
                 for idx, distance in zip(indices[0], distances[0]):
                     if image_files[idx].split('/')[2] == lcategory:
                         # ss['closest_img'] = Image.open(image_files[idx])
-                        ss['closest_img'] = conn.read(f'dl2024-bucket{image_files[idx]}')
+                        ss['closest_img'] = Image.open(fs.open(f'dl2024-bucket{image_files[idx]}', mode='rb').read())
                         ss['closest_dist'] = distance
                         break
                              
