@@ -51,15 +51,18 @@ os.makedirs('./faiss', exist_ok=True)
 def download_drive_file(output, url):
     gdown.download(url, output, quiet=False)
 
-# download_drive_file('faiss', 'https://drive.google.com/file/d/1QSzpvyfEqYM2dbzLPiwVnZdsExP0rMn3/view?usp=sharing')
+download_drive_file('faiss', 'https://drive.google.com/file/d/1QSzpvyfEqYM2dbzLPiwVnZdsExP0rMn3/view?usp=sharing')
 
 # print(os.getcwd())
 # print(os.listdir('./'))
 
-# file_name = "faiss.zip"
-# output_dir = "faiss"
-# os.system("unzip "+file_name+" -d "+output_dir)
+file_name = "faiss.zip"
+output_dir = "faiss"
+os.system("unzip "+file_name+" -d "+output_dir)
     
+# print(os.getcwd())
+print(os.listdir('./'))
+print('################')
 # JSON 파일 경로
 file_path = 'asset/loading.json'
 # 파일을 열고 JSON 데이터 읽기
