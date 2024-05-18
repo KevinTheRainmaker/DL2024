@@ -149,6 +149,13 @@ transform = transforms.Compose([
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 정규화
 ])
 
+if torch.cuda.is_available():
+    device = 'cuda'
+elif torch.backends.mps.is_available():
+    device = 'mps'
+else:
+    device = 'cpu'
+
 def load_model(classes=12):
     # 모델 정의 (ResNet50)
     model = models.resnet50(pretrained=True)
@@ -156,7 +163,7 @@ def load_model(classes=12):
     model.fc = nn.Linear(num_ftrs, classes)
 
     # 학습된 모델의 가중치 로드
-    model.load_state_dict(torch.load('model.pth',map_location='cpu'))
+    model.load_state_dict(torch.load('model.pth', map_location=device))
     model.eval()
     return model
 
@@ -191,7 +198,6 @@ def predict_with_gradcam(model, PILimage):
     heatmap = np.float32(heatmap) / 255
     cam_img = heatmap + np.float32(img)
     cam_img = cam_img / np.max(cam_img)
-
     cv2.imwrite('temp/cam.jpg', np.uint8(255 * cam_img))
     return predicted_label, probs
 
@@ -375,4 +381,5 @@ def main():
                 rerun_app()
                     
 if __name__ == '__main__':
+    os.makedirs('./temp', exist_ok=True)
     main()
