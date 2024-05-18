@@ -186,8 +186,9 @@ def load_model(classes=12):
     model_path = '/mount/src/dl2024/model.pth'
     
     if not os.path.exists(model_path):
-        download_drive_file('model.pth', 'https://drive.google.com/file/d/1sFlYDtHlnd1NF64HODLbk9OX-f4VPMnc/view?usp=sharing')
-        
+        download_drive_file('model.pth', 'https://drive.google.com/file/d/1YIw5PCCkwEkC2hu3ooNtKJrqR5npORLD/view?usp=sharing')
+    print(os.listdir('./'))
+    print('##################')
     # 학습된 모델의 가중치 로드
     model.load_state_dict(torch.load(model_path, map_location=device))
     model.eval()
