@@ -9,6 +9,7 @@ import json
 import os
 import faiss
 import boto3
+import gc
 
 from PIL import Image
 import cv2
@@ -188,6 +189,8 @@ elif torch.backends.mps.is_available():
 else:
     device = 'cpu'
 
+print(device)
+
 def load_model(classes=12):
     file_name = 'model.pth'
     bucket = 'dl2024-bucket'
@@ -302,7 +305,7 @@ def main():
             ss['upload_file'] = False
             ss['process_img'] = True
             ss['image'] = uploaded_file  # backup the file
-            # st.rerun()
+            st.rerun()
     if ss['process_img']:        
         # PIL Image로 변환
         upload_img = Image.open(ss['image'])
@@ -311,43 +314,50 @@ def main():
         ss['face_img'] = upload_img
         with con0:
             with st_lottie_spinner(lottie_animation, key="download"):
-                time.sleep(12)
-            model = load_model(12)
-            print('load model done')
+                model = load_model(12)
+                print('load model done')
 
-            ss['predictions'], ss['probs'] = predict_with_gradcam(model, upload_img_gray)
-            print('predict done')
-            
-            cv2.imwrite('temp/cam.jpg', cv2.resize(cv2.imread('temp/cam.jpg'), upload_img.size))
-            ss['grad_cam'] = Image.open('temp/cam.jpg')
-            
-            extractor = load_extractor()
-            
-            lcategory = class_map[str(ss['predictions'])]
-            file_name = 'faiss/faiss.index'
-            bucket = 'dl2024-bucket'
-            key = f'faiss/faiss_{lcategory}.index'
-            client.download_file(bucket, key, file_name)
-            print('download faiss done')
-            
-            os.listdir('./faiss/')
-            faiss_path = './faiss/faiss.index'
-            loaded_index = load_faiss_index(faiss_path)
-            query_image_tensor = image_to_tensor(upload_img)
-            query_vector = extract_features(extractor, query_image_tensor)
-            distances, indices = search_similar_images(loaded_index, query_vector, k=5)
-            df = conn.read(f"dl2024-bucket/list/{lcategory}_list.csv", input_format="csv", ttl=600)
-            image_files = df.iloc[:, 0].tolist()
-            for idx, distance in zip(indices[0], distances[0]):
-                if image_files[idx].split('/')[2] == lcategory:
-                    # ss['closest_img'] = Image.open(image_files[idx])
-                    ss['closest_img'] = fs.open(f'dl2024-bucket{image_files[idx]}', mode='rb').read()
-                    ss['closest_dist'] = distance
-                    break
-            print('search simmilar image done')
+                ss['predictions'], ss['probs'] = predict_with_gradcam(model, upload_img_gray)
+                print('predict done')
+                del model
+                gc.collect()
+                
+                print('model var deleted')
+                
+                cv2.imwrite('temp/cam.jpg', cv2.resize(cv2.imread('temp/cam.jpg'), upload_img.size))
+                ss['grad_cam'] = Image.open('temp/cam.jpg')
+                
+                extractor = load_extractor()
+                
+                lcategory = class_map[str(ss['predictions'])]
+                file_name = 'faiss/faiss.index'
+                bucket = 'dl2024-bucket'
+                key = f'faiss/faiss_{lcategory}.index'
+                client.download_file(bucket, key, file_name)
+                print('download faiss done')
+                
+                os.listdir('./faiss/')
+                faiss_path = './faiss/faiss.index'
+                loaded_index = load_faiss_index(faiss_path)
+                query_image_tensor = image_to_tensor(upload_img)
+                query_vector = extract_features(extractor, query_image_tensor)
+                del extractor
+                gc.collect()
+                print('extractor var deleted')
+                
+                distances, indices = search_similar_images(loaded_index, query_vector, k=5)
+                df = conn.read(f"dl2024-bucket/list/{lcategory}_list.csv", input_format="csv", ttl=600)
+                image_files = df.iloc[:, 0].tolist()
+                for idx, distance in zip(indices[0], distances[0]):
+                    if image_files[idx].split('/')[2] == lcategory:
+                        # ss['closest_img'] = Image.open(image_files[idx])
+                        ss['closest_img'] = fs.open(f'dl2024-bucket{image_files[idx]}', mode='rb').read()
+                        ss['closest_dist'] = distance
+                        break
+                print('search simmilar image done')
 
-            if os.path.exists(faiss_path):
-                os.remove(faiss_path)
+                if os.path.exists(faiss_path):
+                    os.remove(faiss_path)
 
     if ss['show_result']: 
         result_category = categories[ss['predictions']]
