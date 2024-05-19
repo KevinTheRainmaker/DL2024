@@ -302,7 +302,7 @@ def main():
             ss['upload_file'] = False
             ss['process_img'] = True
             ss['image'] = uploaded_file  # backup the file
-            st.rerun()
+            # st.rerun()
     if ss['process_img']:        
         # PIL Image로 변환
         upload_img = Image.open(ss['image'])
@@ -310,7 +310,8 @@ def main():
 
         ss['face_img'] = upload_img
         with con0:
-            st_lottie_spinner(lottie_animation, key="download")
+            with st_lottie_spinner(lottie_animation, key="download"):
+                time.sleep(12)
             model = load_model(12)
             print('load model done')
 
@@ -344,9 +345,10 @@ def main():
                     ss['closest_dist'] = distance
                     break
             print('search simmilar image done')
-            del loaded_index
+
             if os.path.exists(faiss_path):
                 os.remove(faiss_path)
+
     if ss['show_result']: 
         result_category = categories[ss['predictions']]
         probability = ss['probs'][ss['predictions']]
