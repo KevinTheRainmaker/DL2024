@@ -188,6 +188,11 @@ else:
     device = 'cpu'
 
 def load_model(classes=12):
+    file_name = 'model.pth'
+    bucket = 'dl2024-bucket'
+    key = 'model.pth'
+    client.download_file(bucket, key, file_name)
+    print('download pth done')
     # 모델 정의 (ResNet50)
     model = models.resnet50(pretrained=True)
     num_ftrs = model.fc.in_features
