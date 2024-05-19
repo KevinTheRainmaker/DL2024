@@ -304,7 +304,7 @@ def main():
                 lcategory = class_map[str(ss['predictions'])]
                 file_name = 'faiss/faiss.index'
                 bucket = 'dl2024-bucket'
-                key = 'faiss/faiss_{lcategory}.index'
+                key = f'faiss/faiss_{lcategory}.index'
                 client.download_file(bucket, key, file_name)
                 os.listdir('./faiss/')
                 faiss_path = './faiss/faiss.index'
