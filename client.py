@@ -208,8 +208,18 @@ def load_model(classes=12):
     return model
 
 def load_extractor():
-    model = models.resnet50(pretrained=True)  # 예시로 ResNet-50 모델 사용
-    model.eval()  # 평가 모드로 설정
+    file_name = 'resnet50_pretrained.pth'
+    bucket = 'dl2024-bucket'
+    key = 'resnet50_pretrained.pth'
+    client.download_file(bucket, key, file_name)
+    print('download extractor done')
+    
+    model = models.resnet50(pretrained=False)
+    print('start loading state')
+    start = time.time()
+    model.load_state_dict(torch.load('resnet50_pretrained.pth', map_location=device))
+    print('load state done', time.time()-start)
+    model.eval()
     return model
 
 def predict_with_gradcam(model, PILimage):
