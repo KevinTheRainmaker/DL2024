@@ -293,8 +293,10 @@ def main():
         with con0:
             with st_lottie_spinner(lottie_animation, key="download"):     
                 model = load_model(12)
+                print('load model done')
 
                 ss['predictions'], ss['probs'] = predict_with_gradcam(model, upload_img_gray)
+                print('predict done')
                 
                 cv2.imwrite('temp/cam.jpg', cv2.resize(cv2.imread('temp/cam.jpg'), upload_img.size))
                 ss['grad_cam'] = Image.open('temp/cam.jpg')
@@ -306,6 +308,8 @@ def main():
                 bucket = 'dl2024-bucket'
                 key = f'faiss/faiss_{lcategory}.index'
                 client.download_file(bucket, key, file_name)
+                print('download faiss done')
+                
                 os.listdir('./faiss/')
                 faiss_path = './faiss/faiss.index'
                 loaded_index = load_faiss_index(faiss_path)
@@ -320,6 +324,7 @@ def main():
                         ss['closest_img'] = fs.open(f'dl2024-bucket{image_files[idx]}', mode='rb').read()
                         ss['closest_dist'] = distance
                         break
+                print('search simmilar image done')
                 del loaded_index
                 if os.path.exists(faiss_path):
                     os.remove(faiss_path)
