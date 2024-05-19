@@ -12,6 +12,7 @@ import boto3
 
 from PIL import Image
 import cv2
+import time
 
 import torch
 from torch import nn
@@ -199,7 +200,10 @@ def load_model(classes=12):
     model.fc = nn.Linear(num_ftrs, classes)
     
     # 학습된 모델의 가중치 로드
-    model.load_state_dict(torch.load('./model.pth', map_location=device))
+    print('start loading state')
+    start = time.time()
+    model.load_state_dict(torch.load('model.pth', map_location=device))
+    print('load state done', time.time()-start)
     model.eval()
     return model
 
