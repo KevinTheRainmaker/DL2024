@@ -195,7 +195,7 @@ def load_model(classes=12):
     client.download_file(bucket, key, file_name)
     print('download pth done')
     # 모델 정의 (ResNet50)
-    model = models.resnet50(pretrained=True)
+    model = models.resnet50(pretrained=False)
     num_ftrs = model.fc.in_features
     model.fc = nn.Linear(num_ftrs, classes)
     
