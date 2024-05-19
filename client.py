@@ -305,7 +305,7 @@ def main():
             ss['upload_file'] = False
             ss['process_img'] = True
             ss['image'] = uploaded_file  # backup the file
-            st.rerun()
+            # st.rerun()
     if ss['process_img']:        
         # PIL Image로 변환
         upload_img = Image.open(ss['image'])
