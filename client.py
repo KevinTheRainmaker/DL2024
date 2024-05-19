@@ -8,6 +8,7 @@ import numpy as np
 import json
 import os
 import faiss
+import boto3
 
 from PIL import Image
 import cv2
@@ -22,11 +23,6 @@ import warnings
 warnings.filterwarnings('ignore')
 
 os.environ['KMP_DUPLICATE_LIB_OK']='True'
-
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger()
 
 #레이아웃 설정
 st.set_page_config(
@@ -44,7 +40,17 @@ conn = st.connection('s3', type=FilesConnection)
 fs = s3fs.S3FileSystem(anon=False)
 
 os.makedirs('./temp', exist_ok=True)
-# os.makedirs('./faiss', exist_ok=True)
+os.makedirs('./faiss', exist_ok=True)
+
+AWS_ACCESS_KEY_ID = st.secrets["AWS_ACCESS_KEY_ID"]
+AWS_SECRET_ACCESS_KEY = st.secrets['AWS_SECRET_ACCESS_KEY']
+AWS_DEFAULT_REGION = st.secrets['AWS_DEFAULT_REGION']
+
+client = boto3.client('s3',
+                      aws_access_key_id=AWS_ACCESS_KEY_ID,
+                      aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+                      region_name=AWS_DEFAULT_REGION
+                      )
 
 # def download_drive_file(output, url):
     # gdown.download(url, output, quiet=False)
@@ -282,9 +288,6 @@ def main():
         # PIL Image로 변환
         upload_img = Image.open(ss['image'])
         upload_img_gray = upload_img.convert('L')
-        logger.debug("Image loaded successfully.")
-        logger.debug(f"Image size: {upload_img.size}")
-        logger.debug(f"Image size: {upload_img_gray.size}")
 
         ss['face_img'] = upload_img
         with con0:
@@ -299,13 +302,16 @@ def main():
                 extractor = load_extractor()
                 
                 lcategory = class_map[str(ss['predictions'])]
-                loaded_index = load_faiss_index(f'faiss/faiss_{lcategory}.index')
-                logger.debug("faiss loaded.")
+                file_name = 'faiss/faiss.index'
+                bucket = 'dl2024-bucket'
+                key = 'faiss/faiss_{lcategory}.index'
+                client.download_file(bucket, key, file_name)
+                os.listdir('./faiss/')
+                faiss_path = './faiss/faiss.index'
+                loaded_index = load_faiss_index(faiss_path)
                 query_image_tensor = image_to_tensor(upload_img)
                 query_vector = extract_features(extractor, query_image_tensor)
-                logger.debug("features extracted")
                 distances, indices = search_similar_images(loaded_index, query_vector, k=5)
-                logger.debug("similar images searched")
                 df = conn.read(f"dl2024-bucket/list/{lcategory}_list.csv", input_format="csv", ttl=600)
                 image_files = df.iloc[:, 0].tolist()
                 for idx, distance in zip(indices[0], distances[0]):
@@ -314,7 +320,9 @@ def main():
                         ss['closest_img'] = fs.open(f'dl2024-bucket{image_files[idx]}', mode='rb').read()
                         ss['closest_dist'] = distance
                         break
-                             
+                del loaded_index
+                if os.path.exists(faiss_path):
+                    os.remove(faiss_path)
     if ss['show_result']: 
         result_category = categories[ss['predictions']]
         probability = ss['probs'][ss['predictions']]
