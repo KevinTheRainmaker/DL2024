@@ -25,7 +25,7 @@ e.g. .../DL2024/faiss/faiss_cat.index
 #### 3. 모델 다운로드 <br><br>
 
 client.py와 같은 위치에 위치 시키기 <br>
-<a href='https://drive.google.com/file/d/1sFlYDtHlnd1NF64HODLbk9OX-f4VPMnc/view?usp=sharing'>[구글 드라이브]</a>
+<a href='https://drive.google.com/file/d/1YIw5PCCkwEkC2hu3ooNtKJrqR5npORLD/view?usp=sharing'>[구글 드라이브]</a>
 e.g. .../DL2024/model.pth
 
 ### Client 실행 시키기
