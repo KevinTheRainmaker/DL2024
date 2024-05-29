@@ -309,7 +309,9 @@ def main():
     if ss['process_img']:        
         # PIL Image로 변환
         upload_img = Image.open(ss['image'])
+        face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         upload_img_gray = upload_img.convert('L')
+        upload_img_crop = face_cascade.detectMultiScale(upload_img_gray, scaleFactor=1.1, minNeighbors=4, minSize=(30, 30))
 
         ss['face_img'] = upload_img
         with con0:
@@ -317,7 +319,7 @@ def main():
                 model = load_model(12)
                 print('load model done')
 
-                ss['predictions'], ss['probs'] = predict_with_gradcam(model, upload_img_gray)
+                ss['predictions'], ss['probs'] = predict_with_gradcam(model, upload_img_crop)
                 print('predict done')
                 del model
                 gc.collect()
