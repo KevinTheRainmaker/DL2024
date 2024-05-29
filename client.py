@@ -311,7 +311,7 @@ def main():
         upload_img = Image.open(ss['image'])
         face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         upload_img_gray = upload_img.convert('L')
-        upload_img_crop = face_cascade.detectMultiScale(upload_img_gray, scaleFactor=1.1, minNeighbors=4, minSize=(30, 30))
+        upload_img_crop = face_cascade.detectMultiScale(np.array(upload_img_gray), scaleFactor=1.1, minNeighbors=4, minSize=(30, 30))
 
         ss['face_img'] = upload_img
         with con0:
@@ -326,7 +326,7 @@ def main():
                 
                 print('model var deleted')
                 
-                cv2.imwrite('temp/cam.jpg', cv2.resize(cv2.imread('temp/cam.jpg'), upload_img.size))
+                cv2.imwrite('temp/cam.jpg', cv2.resize(cv2.imread('temp/cam.jpg'), upload_img_gray.size))
                 ss['grad_cam'] = Image.open('temp/cam.jpg')
                 
                 extractor = load_extractor()
